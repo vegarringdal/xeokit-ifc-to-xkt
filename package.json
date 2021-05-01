@@ -1,0 +1,41 @@
+{
+  "name": "@xeokit/xeokit-ifc-to-xkt",
+  "version": "1.0.0",
+  "description": "xeokit-ifc-to-xkt converts models from IFC to xeokit's native .XKT geometry format.",
+  "main": "ifc2xkt.js",
+  "dependencies": {
+    "web-ifc": "0.0.17",
+    "@xeokit/xeokit-xkt-utils": "1.1.1",
+    "commander": "^2.20.0"
+  },
+  "preferGlobal": true,
+  "bin": {
+    "ifc2xkt": "./ifc2xkt.js"
+  },
+  "scripts": {
+    "publish": "npm publish --access public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xeokit/xeokit-ifc-to-xkt.git"
+  },
+  "keywords": [
+    "xeokit",
+    "bim",
+    "ifc",
+    "pointclouds",
+    "ifc",
+    "xkt",
+    "webgl",
+    "3d"
+  ],
+  "author": "xeolabs",
+  "license": "AGPL3",
+  "bugs": {
+    "url": "https://github.com/xeokit/xeokit-ifc-to-xkt/issues"
+  },
+  "homepage": "https://github.com/xeokit/xeokit-ifc-to-xkt#readme",
+  "files": [
+    "/ifc2xkt.js"
+  ]
+}

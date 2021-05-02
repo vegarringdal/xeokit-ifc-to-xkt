@@ -6,6 +6,24 @@
 [````ifc2xkt````](https://github.com/xeokit/xeokit-ifc-to-xkt) is an experimental CLI tool for Node.js that converts IFC
 files into xeokit's native XKT geometry format.
 
+![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/Schependomlaan.png)
+
+* [[View this XKT model](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/Schependomlaan.xkt)]
+# Contents
+
+- [Introduction](#introduction)
+- [Usage](#usage)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Examples](#examples)
+  + [Example 1: Basic Model](#example-1--basic-model)
+  + [Example 2: Double Precision Geometry](#example-2--double-precision-geometry)
+- [Benchmarks](#benchmarks)
+  + [Issues found in benchmarks](#issues-found-in-benchmarks)
+- [Visual Tests](#visual-tests)
+
+# Introduction
+
 The XKT format compresses huge double-precision models into a compact payload that can be rapidly loaded over the Web
 into a xeokit viewer.
 
@@ -17,10 +35,6 @@ and [xeokit-xkt-utils](https://github.com/xeokit/xeokit-xkt-utils) to generate t
 The converter is not perfect, and loses some transform precision with distantly-placed models. However, it runs quickly,
 and despite losing some transform precision, seems able to convert distantly-placed models without losing geometry
 precision.
-
-![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/Schependomlaan.png)
-
-* [[View this XKT model](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/Schependomlaan.xkt)]
 
 # Usage
 

@@ -2,7 +2,7 @@
 
 const commander = require('commander');
 const package = require('./package.json');
-const {convertIFCFileToXKT} = require("./dist/xeokit-ifc-to-xkt.cjs.js");
+const {convertIFCFileToXKT} = require("./src/convertIFCFileToXKT.js");
 
 const program = new commander.Command();
 

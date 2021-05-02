@@ -37,7 +37,7 @@ Now you're ready to convert some IFC files.
 To convert a file, run ````ifc2xkt````, specifying paths to the source IFC file and the target XKT file.
 
 ```bash
-node ifc2xkt.js -s Schependomlaan.ifc -o Schependomlaan.xkt
+node ifc2xkt.js -s ./tests/models/ifc/Schependomlaan.ifc -o ./tests/models/xkt/Schependomlaan.xkt
 ```
 
 Once you've got your XKT file, you can then view it with xeokit in the browser.
@@ -53,7 +53,7 @@ const xktLoader = new XKTLoaderPlugin(viewer);
 
 const model = xktLoader.load({
     id: "myModel",
-    src: "Schependomlaan.xkt"
+    src: "./tests/models/xkt/Schependomlaan.xkt"
 });
 ```
 
@@ -149,7 +149,7 @@ sys     0m0.173s
 
 # Benchmarks
 
-The table below shows benchmarks for `ifc2xkt` using various IFC2x3 and IFC4 files. Click "View" in the last column to open 
+The table below shows benchmarks for ````ifc2xkt```` using various IFC2x3 and IFC4 files. Click "View" in the last column to open 
 each benchmark's converted XKT file in a xeokit viewer.
 
 <table class="collection-content">
@@ -230,10 +230,15 @@ each benchmark's converted XKT file in a xeokit viewer.
 
 # Visual Tests
 
-We're using visual testing on Percy to catch bugs in `ifc2xkt`.
+We're using visual testing on Percy to catch bugs in ````ifc2xkt````.
 
 See the latest test reports here: [https://percy.io/73524691/xeokit-ifc-to-xkt](https://percy.io/73524691/xeokit-ifc-to-xkt)
 
 ![Percy](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/percy.png)
 
 
+# Further Work
+
+* Debug the transform precision loss in ````web-ifc````.
+* Support point clouds, line segments etc.
+* Somehow configure rollup.js to build a CJS binary that bundles ````web-ifc.wasm````.

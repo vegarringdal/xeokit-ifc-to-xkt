@@ -3,8 +3,6 @@
 [![This project is using Percy.io for visual regression testing.](https://percy.io/static/images/percy-badge.svg)](https://percy.io/73524691/xeokit-ifc-to-xkt)
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-ifc-to-xkt.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-ifc-to-xkt)
 
----
-
 [````ifc2xkt````](https://github.com/xeokit/xeokit-ifc-to-xkt) is an experimental CLI tool for Node.js that converts IFC
 files into xeokit's native XKT geometry format.
 
@@ -23,8 +21,6 @@ precision.
 ![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/Schependomlaan.png)
 
 * [[View this XKT model](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/Schependomlaan.xkt)]
-
----
 
 # Usage
 
@@ -61,8 +57,6 @@ const model = xktLoader.load({
 });
 ```
 
----
-
 # Features
 
 - Converts IFC 2x3 and 4 to XKT
@@ -71,8 +65,6 @@ const model = xktLoader.load({
 - Direct IFC→XKT conversion without intermediate file formats
 - Compact XKT output
 - Double-precision geometry, enabling models to be viewed at their original site placement
-
----
 
 # Architecture
 
@@ -91,11 +83,9 @@ following steps:
 2. translates the IFC document model into an XKT document model, then
 3. serializes the XKT document model to an XKT file.
 
----
-
 # Examples
 
-## Example 1: Basic Model
+### Example 1: Basic Model
 
 In this first example, we're converting an IFC 2x3 file to XKT. This model is centered at the IFC coordinate origin, and
 therefore relies on single-precision geometry.
@@ -125,7 +115,7 @@ sys     0m0.241s
 
 * [[View this XKT model](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/Schependomlaan.xkt)]
 
-## Example 2: Double Precision Geometry
+### Example 2: Double Precision Geometry
 
 In this second example, we're converting an IFC 4 model which is placed at ````[1842022, 10, -5173301]````, and
 consequently relies on double-precision geometry coordinates, because the coordinate values will be huge.
@@ -156,8 +146,6 @@ sys     0m0.173s
 ![MAP](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/MAP.png)
 
 * [[View this XKT model](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/MAP.xkt)]
-
----
 
 # Benchmarks
 
@@ -234,13 +222,11 @@ each benchmark's converted XKT file in a xeokit viewer.
    </tbody>
 </table>
 
-## Issues
+### Issues found in benchmarks
 
 - Holter Tower has missing objects
 - MAP has misaligned objects
 - Some colors are incorrect
-
----
 
 # Visual Tests
 

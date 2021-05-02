@@ -1,6 +1,6 @@
 {
     "name": "@xeokit/xeokit-ifc-to-xkt",
-    "version": "1.0.0",
+    "version": "0.0.1-alpha.1",
     "description": "xeokit-ifc-to-xkt converts IFC STEP files to xeokit's compact XKT geometry format.",
     "main": "ifc2xkt.js",
     "preferGlobal": true,

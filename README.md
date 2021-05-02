@@ -1,5 +1,8 @@
 # xeokit-ifc-to-xkt
 
+[![This project is using Percy.io for visual regression testing.](https://percy.io/static/images/percy-badge.svg)](https://percy.io/73524691/xeokit-ifc-to-xkt)
+[![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-ifc-to-xkt.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-ifc-to-xkt)
+
 ## Usage
 
 ````bash

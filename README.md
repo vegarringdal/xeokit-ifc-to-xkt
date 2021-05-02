@@ -24,10 +24,11 @@ precision.
 
 # Usage
 
-Clone the [repository](https://github.com/xeokit/xeokit-ifc-to-xkt) and install the converter:
+Clone the [repository](https://github.com/xeokit/xeokit-ifc-to-xkt) and install the converter. Note that we're
+using ````git lfs clone```` so that we get some example IFC files to convert.
 
 ```bash
-git clone https://github.com/xeokit/xeokit-ifc-to-xkt.git
+git lfs clone https://github.com/xeokit/xeokit-ifc-to-xkt.git
 cd xeokit-ifc-to-xkt
 npm install
 ```
@@ -70,10 +71,10 @@ const model = xktLoader.load({
 
 As mentioned, [````ifc2xkt````](https://github.com/xeokit/xeokit-ifc-to-xkt) is built around two open source libraries:
 
- * [````web-ifc````](https://github.com/tomvandig/web-ifc) - an MIT-licensed library
+* [````web-ifc````](https://github.com/tomvandig/web-ifc) - an MIT-licensed library
   from [tomvandig](https://github.com/tomvandig), which loads an IFC file into an in-memory document model that
   represents the IFC geometry content.
- * [````xeokit-xkt-utils````](https://github.com/xeokit/xeokit-xkt-utils) - an AGPL3-licensed library from xeolabs that
+* [````xeokit-xkt-utils````](https://github.com/xeokit/xeokit-xkt-utils) - an AGPL3-licensed library from xeolabs that
   builds an in-memory XKT document model and saves it as an XKT file.
 
 Using these two libraries together, [````ifc2xkt````](https://github.com/xeokit/xeokit-ifc-to-xkt) performs the
@@ -149,8 +150,8 @@ sys     0m0.173s
 
 # Benchmarks
 
-The table below shows benchmarks for ````ifc2xkt```` using various IFC2x3 and IFC4 files. Click "View" in the last column to open 
-each benchmark's converted XKT file in a xeokit viewer.
+The table below shows benchmarks for ````ifc2xkt```` using various IFC2x3 and IFC4 files. Click "View" in the last
+column to open each benchmark's converted XKT file in a xeokit viewer.
 
 <table class="collection-content">
    <thead>
@@ -232,10 +233,10 @@ each benchmark's converted XKT file in a xeokit viewer.
 
 We're using visual testing on Percy to catch bugs in ````ifc2xkt````.
 
-See the latest test reports here: [https://percy.io/73524691/xeokit-ifc-to-xkt](https://percy.io/73524691/xeokit-ifc-to-xkt)
+See the latest test reports
+here: [https://percy.io/73524691/xeokit-ifc-to-xkt](https://percy.io/73524691/xeokit-ifc-to-xkt)
 
 ![Percy](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/percy.png)
-
 
 # Further Work
 

@@ -3,7 +3,7 @@
 [![This project is using Percy.io for visual regression testing.](https://percy.io/static/images/percy-badge.svg)](https://percy.io/73524691/xeokit-ifc-to-xkt)
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-ifc-to-xkt.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-ifc-to-xkt)
 
-[````ifc2xkt````](https://github.com/xeokit/xeokit-ifc-to-xkt) is an experimental CLI tool for Node.js that converts IFC
+[ifc2xkt](https://github.com/xeokit/xeokit-ifc-to-xkt) is an experimental CLI tool for Node.js that converts IFC
 files into xeokit's native XKT geometry format.
 
 ![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/Schependomlaan.png)
@@ -21,6 +21,7 @@ files into xeokit's native XKT geometry format.
 - [Benchmarks](#benchmarks)
   + [Issues found in benchmarks](#issues-found-in-benchmarks)
 - [Visual Tests](#visual-tests)
+- [Acknowledgements](#acknowledgements)
 
 # Introduction
 
@@ -83,15 +84,15 @@ const model = xktLoader.load({
 
 # Architecture
 
-As mentioned, [````ifc2xkt````](https://github.com/xeokit/xeokit-ifc-to-xkt) is built around two open source libraries:
+As mentioned, [ifc2xkt](https://github.com/xeokit/xeokit-ifc-to-xkt) is built around two open source libraries:
 
-* [````web-ifc````](https://github.com/tomvandig/web-ifc) - an MIT-licensed library
-  from [tomvandig](https://github.com/tomvandig), which loads an IFC file into an in-memory document model that
+* [web-ifc](https://github.com/tomvandig/web-ifc) - an MIT-licensed library
+  from [@tomvandig](https://github.com/tomvandig), which loads an IFC file into an in-memory document model that
   represents the IFC geometry content.
-* [````xeokit-xkt-utils````](https://github.com/xeokit/xeokit-xkt-utils) - an AGPL3-licensed library from xeolabs that
+* [xeokit-xkt-utils](https://github.com/xeokit/xeokit-xkt-utils) - an AGPL3-licensed library from xeolabs that
   builds an in-memory XKT document model and saves it as an XKT file.
 
-Using these two libraries together, [````ifc2xkt````](https://github.com/xeokit/xeokit-ifc-to-xkt) performs the
+Using these two libraries together, [ifc2xkt](https://github.com/xeokit/xeokit-ifc-to-xkt) performs the
 following steps:
 
 1. loads an IFC into an in-memory IFC document model,
@@ -257,3 +258,10 @@ here: [https://percy.io/73524691/xeokit-ifc-to-xkt](https://percy.io/73524691/xe
 * Debug the transform precision loss in ````web-ifc````.
 * Support point clouds, line segments etc.
 * Somehow configure rollup.js to build a CJS binary that bundles ````web-ifc.wasm````.
+
+# Acknowledgements
+
+This project builds on previous work that was generously contributed to the community by other open source BIM developers:
+
+*  [web-ifc](https://github.com/tomvandig/web-ifc) by [@tomvandig](https://github.com/tomvandig) 
+*  [web-ifc-viewer](https://github.com/agviegas/web-ifc-viewer) by [@agviegas](https://github.com/agviegas)

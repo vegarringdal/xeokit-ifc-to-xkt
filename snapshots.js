@@ -18,8 +18,6 @@ PercyScript.run(async (page, percySnapshot) => {
         });
     }
 
-    console.log(`Converting models`);
-
     const models = [
         "IfcOpenHouse2x3",
         "IfcOpenHouse4",
@@ -27,8 +25,6 @@ PercyScript.run(async (page, percySnapshot) => {
         "MAP",
         "confCenter"
     ];
-
-    console.log(`Running visual tests`);
 
     let server = httpServer.createServer();
     server.listen(3000);

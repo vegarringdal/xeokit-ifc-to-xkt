@@ -12,7 +12,13 @@
 
     import {Viewer, XKTLoaderPlugin} from "./build/xeokit-components.js";
 
-    import {signalTestComplete} from "./libs/utils.js";
+    import {getRequestParams, signalTestComplete} from "./libs/utils.js";
+
+    const xktSrc = getRequestParams()["xkt_src"];
+
+    if (!xktSrc) {
+        throw "Page param expected: xkt_src";
+    }
 
     const viewer = new Viewer({
         canvasId: "myCanvas",
@@ -27,12 +33,12 @@
 
     const model = xktLoader.load({
         id: "myModel",
-        src: "models/xkt/Schependomlaan.xkt",
+        src: xktSrc,
         edges: true
     });
 
     model.on("loaded", () => {
-        viewer.scene.cameraFlight.jumpTo(model);
+        viewer.cameraFlight.jumpTo(model);
         signalTestComplete();
     });
 

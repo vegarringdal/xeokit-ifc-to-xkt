@@ -9,7 +9,7 @@ const {parseIFCIntoXKTModel} = require("./parseIFCIntoXKTModel.js");
  * @param {Arraybuffer} ifcArrayBuffer The IFC file data.
  * @return {Promise<Buffer>} The XKT file data.
  */
-async function convertIFCDataToXKT(ifcArrayBuffer) {
+module.exports.convertIFCDataToXKT = async function(ifcArrayBuffer) {
     const xktModel = new XKTModel();
     await parseIFCIntoXKTModel(ifcArrayBuffer, xktModel);
     xktModel.finalize();
@@ -17,6 +17,4 @@ async function convertIFCDataToXKT(ifcArrayBuffer) {
     const xktContent = Buffer.from(xktArrayBuffer);
     return xktContent;
 }
-
-exports.convertIFCDataToXKT = convertIFCDataToXKT;
 

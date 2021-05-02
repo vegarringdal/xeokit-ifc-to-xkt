@@ -2,6 +2,12 @@ const PercyScript = require('@percy/script');
 const httpServer = require('http-server');
 const {convertIFCFileToXKT} = require("./src/convertIFCFileToXKT.js");
 
+//---------------------------------------------------------------------------------
+// For each test IFC model:
+//  - convert IFC to XKT
+//  - load XKT into xeokit and verify that it looks OK
+//---------------------------------------------------------------------------------
+
 PercyScript.run(async (page, percySnapshot) => {
 
     async function testPage(pageName) {
@@ -14,11 +20,13 @@ PercyScript.run(async (page, percySnapshot) => {
 
     console.log(`Converting models`);
 
-    await convertIFCFileToXKT("./tests/models/ifc/IfcOpenHouse2x3.ifc", "./tests/models/xkt/IfcOpenHouse2x3.xkt");
-    await convertIFCFileToXKT("./tests/models/ifc/IfcOpenHouse4.ifc", "./tests/models/xkt/IfcOpenHouse4.xkt");
-    await convertIFCFileToXKT("./tests/models/ifc/Schependomlaan.ifc", "./tests/models/xkt/Schependomlaan.xkt");
-    await convertIFCFileToXKT("./tests/models/ifc/MAP.ifc", "./tests/models/xkt/MAP.xkt");
-    await convertIFCFileToXKT("./tests/models/ifc/confCenter.ifc", "./tests/models/xkt/confCenter.xkt");
+    const models = [
+        "IfcOpenHouse2x3",
+        "IfcOpenHouse4",
+        "Schependomlaan",
+        "MAP",
+        "confCenter"
+    ];
 
     console.log(`Running visual tests`);
 
@@ -27,8 +35,16 @@ PercyScript.run(async (page, percySnapshot) => {
 
     console.log(`Server started`);
 
-    await testPage('convert_IFC_Schependomlaan.html');
-    await testPage('convert_IFC_doublePrecision_MAP.html');
+    for (let i = 0, len = models.length; i < len; i++) {
+
+        const modelId = models[i];
+        const ifcPath = "./tests/models/ifc/" + modelId + ".ifc";
+        const xktPath = "./tests/models/xkt/" + modelId + ".xkt";
+
+        await convertIFCFileToXKT(ifcPath, xktPath);
+
+        await testPage("loadXKT.html?xkt_src=models/xkt/" + modelId + ".xkt");
+    }
 
     server.close();
 });

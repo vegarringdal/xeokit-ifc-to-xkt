@@ -10,11 +10,9 @@ const {convertIFCDataToXKT} = require("./convertIFCDataToXKT.js");
  * @param {String} xktPath Path to XKT target file.
  * @return {Promise<void>}
  */
-async function convertIFCFileToXKT(ifcPath, xktPath) {
+module.exports.convertIFCFileToXKT = async function(ifcPath, xktPath) {
     const ifcArrayBuffer = await fs.readFileSync(ifcPath);
     const xktContent = await convertIFCDataToXKT(ifcArrayBuffer);
     await fs.writeFileSync(xktPath, xktContent);
 }
-
-exports.convertIFCFileToXKT = convertIFCFileToXKT;
 

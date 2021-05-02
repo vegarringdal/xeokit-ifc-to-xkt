@@ -1,7 +1,6 @@
 const WebIFC = require("web-ifc/web-ifc-api-node.js");
 
 const ifcApi = new WebIFC.IfcAPI();
-ifcApi.Init();
 
 /**
  * Parses an IFC STEP file into an XKTModel.
@@ -12,7 +11,7 @@ ifcApi.Init();
  * @param {XKTModel} xktModel The target XKTModel. Note that the caller is responsible for finalizing the XKTModel before use.
  * @return {Promise<void>}
  */
-async function parseIFCIntoXKTModel(ifcArrayBuffer, xktModel) {
+module.exports.parseIFCIntoXKTModel = async function (ifcArrayBuffer, xktModel) {
 
     let nextId = 0;
 
@@ -86,5 +85,3 @@ async function parseIFCIntoXKTModel(ifcArrayBuffer, xktModel) {
         });
     }
 }
-
-exports.parseIFCIntoXKTModel = parseIFCIntoXKTModel;

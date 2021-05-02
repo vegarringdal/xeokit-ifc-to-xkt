@@ -57,7 +57,7 @@ PercyScript.run(async (page, percySnapshot) => {
         modelStats.modelId = modelId;
         modelStats.conversionTimeSecs = elapsedSeconds;
         
-         await testPage("loadXKT.html?xkt_src=models/xkt/" + modelId + ".xkt");
+        await testPage("loadXKT.html?xkt_src=models/xkt/" + modelId + ".xkt");
 
         testStats.models[modelId] = modelStats;
     }

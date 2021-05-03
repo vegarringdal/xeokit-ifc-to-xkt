@@ -31,7 +31,9 @@ PercyScript.run(async (page, percySnapshot) => {
         "Schependomlaan",
         "MAP",
         "confCenter",
-        "dataHolter"
+        "dataHolter",
+        "rac_advanced_sample_project",
+        "rme_advanced_sample_project"
     ];
 
     let server = httpServer.createServer();

@@ -6125,13 +6125,7 @@ math.buildEdgeIndices = (function () {
  * the {@link ReadableGeometry}:
  *
  *````JavaScript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {buildTorusGeometry} from "../src/scene/geometry/builders/buildTorusGeometry.js";
- * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
- * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
- * import {Texture} from "../src/scene/materials/Texture.js";
- * import {Fresnel} from "../src/scene/materials/Fresnel.js";
+ * import {Viewer, Mesh, buildTorusGeometry, ReadableGeometry, PhongMaterial, Texture, Fresnel} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *        canvasId: "myCanvas"
@@ -7694,7 +7688,10 @@ class Canvas extends Component {
                     this.gl.hint(ext.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, this.gl.FASTEST);
                 }
                 if (WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"]) {
-                    const ext = this.gl.getExtension('EXT_frag_depth');
+                    this.gl.getExtension('EXT_frag_depth');
+                }
+                if (WEBGL_INFO$1.SUPPORTED_EXTENSIONS["WEBGL_depth_texture"]) {
+                    this.gl.getExtension('WEBGL_depth_texture');
                 }
             }
         }
@@ -8323,6 +8320,7 @@ class RenderBuffer {
         this.buffer = null;
         this.bound = false;
         this.size = options.size;
+        this._hasDepthTexture = !!options.depthTexture;
     }
 
     setSize(size) {
@@ -8373,16 +8371,25 @@ class RenderBuffer {
             }
         }
 
-        const texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-
+        const colorTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, colorTexture);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+        let depthTexture;
+
+        if (this._hasDepthTexture) {
+            depthTexture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, depthTexture);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, width, height, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
+        }
 
         const renderbuf = gl.createRenderbuffer();
         gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuf);
@@ -8390,8 +8397,13 @@ class RenderBuffer {
 
         const framebuf = gl.createFramebuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, framebuf);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuf);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, colorTexture, 0);
+
+        if (this._hasDepthTexture) {
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTexture, 0);
+        } else {
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuf);
+        }
 
         gl.bindTexture(gl.TEXTURE_2D, null);
         gl.bindRenderbuffer(gl.RENDERBUFFER, null);
@@ -8431,7 +8443,8 @@ class RenderBuffer {
         this.buffer = {
             framebuf: framebuf,
             renderbuf: renderbuf,
-            texture: texture,
+            texture: colorTexture,
+            depthTexture: depthTexture,
             width: width,
             height: height
         };
@@ -8560,10 +8573,39 @@ class RenderBuffer {
         });
     }
 
+    hasDepthTexture() {
+        return this._hasDepthTexture;
+    }
+
+    getDepthTexture() {
+        if (!this._hasDepthTexture) {
+            return null;
+        }
+        const self = this;
+        return this._depthTexture || (this._dethTexture = {
+            renderBuffer: this,
+            bind: function (unit) {
+                if (self.buffer && self.buffer.depthTexture) {
+                    self.gl.activeTexture(self.gl["TEXTURE" + unit]);
+                    self.gl.bindTexture(self.gl.TEXTURE_2D, self.buffer.depthTexture);
+                    return true;
+                }
+                return false;
+            },
+            unbind: function (unit) {
+                if (self.buffer && self.buffer.depthTexture) {
+                    self.gl.activeTexture(self.gl["TEXTURE" + unit]);
+                    self.gl.bindTexture(self.gl.TEXTURE_2D, null);
+                }
+            }
+        });
+    }
+
     destroy() {
         if (this.allocated) {
             const gl = this.gl;
             gl.deleteTexture(this.buffer.texture);
+            gl.deleteTexture(this.buffer.depthTexture);
             gl.deleteFramebuffer(this.buffer.framebuf);
             gl.deleteRenderbuffer(this.buffer.renderbuf);
             this.allocated = false;
@@ -8572,6 +8614,7 @@ class RenderBuffer {
         }
         this._imageDataCache = null;
         this._texture = null;
+        this._depthTexture = null;
     }
 }
 
@@ -9946,7 +9989,7 @@ class SAOOcclusionRenderer {
         this._indicesBuf = null;
     }
 
-    render(depthTexture) {
+    render(depthRenderBuffer) {
 
         this._build();
 
@@ -10014,6 +10057,10 @@ class SAOOcclusionRenderer {
         gl.uniform2fv(this._uViewport, tempVec2);
         gl.uniform1f(this._uRandomSeed, randomSeed);
 
+        const depthTexture = WEBGL_INFO$1.SUPPORTED_EXTENSIONS["WEBGL_depth_texture"]
+            ? depthRenderBuffer.getDepthTexture()
+            : depthRenderBuffer.getTexture();
+
         program.bindTexture(this._uDepthTexture, depthTexture, 0);
 
         this._aUV.bindArrayBuffer(this._uvBuf);
@@ -10047,13 +10094,8 @@ class SAOOcclusionRenderer {
 
         this._program = new Program(gl, {
 
-            vertex: [`#ifdef GL_FRAGMENT_PRECISION_HIGH
-                    precision highp float;
+            vertex: [`precision highp float;
                     precision highp int;
-                    #else
-                    precision mediump float;
-                    precision mediump int;
-                    #endif
                     
                     attribute vec3 aPosition;
                     attribute vec2 aUV;            
@@ -10066,14 +10108,9 @@ class SAOOcclusionRenderer {
                     }`],
 
             fragment: [
-                `#extension GL_OES_standard_derivatives : require
-                #ifdef GL_FRAGMENT_PRECISION_HIGH
+                `#extension GL_OES_standard_derivatives : require              
                 precision highp float;
-                precision highp int;
-                #else
-                precision mediump float;
-                precision mediump int;
-                #endif                   
+                precision highp int;           
                 
                 #define NORMAL_TEXTURE 0
                 #define PI 3.14159265359
@@ -10131,8 +10168,8 @@ class SAOOcclusionRenderer {
                     return r * packUpscale;
                 }
 
-                float unpackRGBAToFloat( const in vec4 v ) {
-                    return dot( v, unPackFactors );
+                float unpackRGBAToFloat( const in vec4 v ) {                   
+                    return dot( floor( v * 255.0 + 0.5 ) / 255.0, unPackFactors );
                 }
                 
                 float perspectiveDepthToViewZ( const in float invClipZ, const in float near, const in float far ) {
@@ -10143,9 +10180,9 @@ class SAOOcclusionRenderer {
                     return linearClipZ * ( near - far ) - near;
                 }
                 
-                float getDepth( const in vec2 screenPos ) {
-                	return unpackRGBAToFloat( texture2D( uDepthTexture, screenPos ) );
-                }
+                float getDepth( const in vec2 screenPosition ) {`
+                + (WEBGL_INFO$1.SUPPORTED_EXTENSIONS["WEBGL_depth_texture"] ? `return texture2D(uDepthTexture, screenPosition).r;` : `return unpackRGBAToFloat(texture2D( uDepthTexture, screenPosition));`) +
+                `}
 
                 float getViewZ( const in float depth ) {
                      if (uPerspective) {
@@ -10339,13 +10376,8 @@ class SAODepthLimitedBlurRenderer {
         this._program = new Program(gl, {
 
             vertex: [
-                `#ifdef GL_FRAGMENT_PRECISION_HIGH
-                precision highp float;
+                `precision highp float;
                 precision highp int;
-                #else
-                precision mediump float;
-                precision mediump int;
-                #endif
                     
                 attribute vec3 aPosition;
                 attribute vec2 aUV;
@@ -10359,13 +10391,8 @@ class SAODepthLimitedBlurRenderer {
                 }`],
 
             fragment: [
-                `#ifdef GL_FRAGMENT_PRECISION_HIGH
-                precision highp float;
+                `precision highp float;
                 precision highp int;
-                #else
-                precision mediump float;
-                precision mediump int;
-                #endif
                     
                 #define PI 3.14159265359
                 #define PI2 6.28318530718
@@ -10396,7 +10423,7 @@ class SAODepthLimitedBlurRenderer {
                 const float shiftRights = 1. / 256.;
                 
                 float unpackRGBAToFloat( const in vec4 v ) {
-                    return dot( v, unpackFactors );
+                    return dot( floor( v * 255.0 + 0.5 ) / 255.0, unpackFactors );
                 }               
 
                 vec4 packFloatToRGBA( const in float v ) {
@@ -10421,9 +10448,9 @@ class SAODepthLimitedBlurRenderer {
                     return ( uCameraNear * uCameraFar ) / ( ( uCameraFar - uCameraNear ) * invClipZ - uCameraFar );
                 }
 
-                float getDepth( const in vec2 screenPosition ) {
-                	return unpackRGBAToFloat( texture2D( uDepthTexture, screenPosition ) );
-                }
+                float getDepth( const in vec2 screenPosition ) {`
+                + (WEBGL_INFO$1.SUPPORTED_EXTENSIONS["WEBGL_depth_texture"] ? `return texture2D(uDepthTexture, screenPosition).r;` : `return unpackRGBAToFloat(texture2D( uDepthTexture, screenPosition));`) +
+                `}
 
                 float getViewZ( const in float depth ) {
                      return perspectiveDepthToViewZ( depth );
@@ -10507,7 +10534,7 @@ class SAODepthLimitedBlurRenderer {
         this._aUV = this._program.getAttribute("aUV");
     }
 
-    render(depthTexture, occlusionTexture, direction) {
+    render(depthRenderBuffer, occlusionRenderBuffer, direction) {
 
         if (this._programError) {
             return;
@@ -10564,6 +10591,12 @@ class SAODepthLimitedBlurRenderer {
 
         gl.uniform1fv(this._uSampleWeights, sampleWeights);
 
+        const depthTexture = WEBGL_INFO$1.SUPPORTED_EXTENSIONS["WEBGL_depth_texture"]
+            ? depthRenderBuffer.getDepthTexture()
+            : depthRenderBuffer.getTexture();
+
+        const occlusionTexture = occlusionRenderBuffer.getTexture();
+
         program.bindTexture(this._uDepthTexture, depthTexture, 0);
         program.bindTexture(this._uOcclusionTexture, occlusionTexture, 1);
 
@@ -10613,6 +10646,8 @@ const Renderer = function (scene, options) {
     const canvasTransparent = (!!options.transparent);
     const alphaDepthMask = options.alphaDepthMask;
 
+    const extensionHandles = {};
+
     const pickIDs = new Map({});
 
     let drawableTypeInfo = {};
@@ -10622,9 +10657,11 @@ const Renderer = function (scene, options) {
     let stateSortDirty = true;
     let imageDirty = true;
 
-    const saoDepthBuffer = new RenderBuffer(canvas, gl);
-    const occlusionBuffer1 = new RenderBuffer(canvas, gl);
-    const occlusionBuffer2 = new RenderBuffer(canvas, gl);
+    const saoDepthRenderBuffer = new RenderBuffer(canvas, gl, {
+        depthTexture: WEBGL_INFO$1.SUPPORTED_EXTENSIONS["WEBGL_depth_texture"]
+    });
+    const occlusionRenderBuffer1 = new RenderBuffer(canvas, gl);
+    const occlusionRenderBuffer2 = new RenderBuffer(canvas, gl);
 
     const pickBuffer = new RenderBuffer(canvas, gl);
     const snapshotBuffer = new RenderBuffer(canvas, gl);
@@ -10654,9 +10691,9 @@ const Renderer = function (scene, options) {
 
         pickBuffer.webglContextRestored(gl);
         snapshotBuffer.webglContextRestored(gl);
-        saoDepthBuffer.webglContextRestored(gl);
-        occlusionBuffer1.webglContextRestored(gl);
-        occlusionBuffer2.webglContextRestored(gl);
+        saoDepthRenderBuffer.webglContextRestored(gl);
+        occlusionRenderBuffer1.webglContextRestored(gl);
+        occlusionRenderBuffer2.webglContextRestored(gl);
 
         saoOcclusionRenderer.init();
         saoDepthLimitedBlurRenderer.init();
@@ -10828,12 +10865,16 @@ const Renderer = function (scene, options) {
 
     function draw(params) {
 
-        if (WEBGL_INFO$1.SUPPORTED_EXTENSIONS["OES_element_index_uint"]) {  // In case context lost/recovered
-            gl.getExtension("OES_element_index_uint");
+        if (WEBGL_INFO$1.SUPPORTED_EXTENSIONS["OES_element_index_uint"]) { // In case context lost/recovered
+            extensionHandles.OES_element_index_uint = gl.getExtension("OES_element_index_uint");
         }
 
         if (scene.logarithmicDepthBufferEnabled && WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"]) {
-            gl.getExtension('EXT_frag_depth');
+            extensionHandles.EXT_frag_depth = gl.getExtension('EXT_frag_depth');
+        }
+
+        if (WEBGL_INFO$1.SUPPORTED_EXTENSIONS["WEBGL_depth_texture"]) {
+            extensionHandles.WEBGL_depth_texture = gl.getExtension('WEBGL_depth_texture');
         }
 
         const sao = scene.sao;
@@ -10853,33 +10894,33 @@ const Renderer = function (scene, options) {
 
         // Render depth buffer
 
-        saoDepthBuffer.bind();
-        saoDepthBuffer.clear();
+        saoDepthRenderBuffer.bind();
+        saoDepthRenderBuffer.clear();
         drawDepth(params);
-        saoDepthBuffer.unbind();
+        saoDepthRenderBuffer.unbind();
 
         // Render occlusion buffer
 
-        occlusionBuffer1.bind();
-        occlusionBuffer1.clear();
-        saoOcclusionRenderer.render(saoDepthBuffer.getTexture(), null);
-        occlusionBuffer1.unbind();
+        occlusionRenderBuffer1.bind();
+        occlusionRenderBuffer1.clear();
+        saoOcclusionRenderer.render(saoDepthRenderBuffer);
+        occlusionRenderBuffer1.unbind();
 
         if (sao.blur) {
 
             // Horizontally blur occlusion buffer 1 into occlusion buffer 2
 
-            occlusionBuffer2.bind();
-            occlusionBuffer2.clear();
-            saoDepthLimitedBlurRenderer.render(saoDepthBuffer.getTexture(), occlusionBuffer1.getTexture(), 0);
-            occlusionBuffer2.unbind();
+            occlusionRenderBuffer2.bind();
+            occlusionRenderBuffer2.clear();
+            saoDepthLimitedBlurRenderer.render(saoDepthRenderBuffer, occlusionRenderBuffer1, 0);
+            occlusionRenderBuffer2.unbind();
 
             // Vertically blur occlusion buffer 2 back into occlusion buffer 1
 
-            occlusionBuffer1.bind();
-            occlusionBuffer1.clear();
-            saoDepthLimitedBlurRenderer.render(saoDepthBuffer.getTexture(), occlusionBuffer2.getTexture(), 1);
-            occlusionBuffer1.unbind();
+            occlusionRenderBuffer1.bind();
+            occlusionRenderBuffer1.clear();
+            saoDepthLimitedBlurRenderer.render(saoDepthRenderBuffer, occlusionRenderBuffer2, 1);
+            occlusionRenderBuffer1.unbind();
         }
     }
 
@@ -11046,7 +11087,7 @@ const Renderer = function (scene, options) {
             frameCtx.lineWidth = 1;
 
             const saoPossible = scene.sao.possible;
-            frameCtx.occlusionTexture = saoPossible ? occlusionBuffer1.getTexture() : null;
+            frameCtx.occlusionTexture = saoPossible ? occlusionRenderBuffer1.getTexture() : null;
 
             let i;
             let len;
@@ -11372,11 +11413,15 @@ const Renderer = function (scene, options) {
             updateDrawlist();
 
             if (WEBGL_INFO$1.SUPPORTED_EXTENSIONS["OES_element_index_uint"]) { // In case context lost/recovered
-                gl.getExtension("OES_element_index_uint");
+                extensionHandles.OES_element_index_uint = gl.getExtension("OES_element_index_uint");
             }
 
             if (scene.logarithmicDepthBufferEnabled && WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"]) {
-                gl.getExtension('EXT_frag_depth');
+                extensionHandles.EXT_frag_depth = gl.getExtension('EXT_frag_depth');
+            }
+
+            if (WEBGL_INFO$1.SUPPORTED_EXTENSIONS["WEBGL_depth_texture"]) {
+                extensionHandles.WEBGL_depth_texture = gl.getExtension('WEBGL_depth_texture');
             }
 
             let canvasX;
@@ -11836,9 +11881,9 @@ const Renderer = function (scene, options) {
 
         pickBuffer.destroy();
         snapshotBuffer.destroy();
-        saoDepthBuffer.destroy();
-        occlusionBuffer1.destroy();
-        occlusionBuffer2.destroy();
+        saoDepthRenderBuffer.destroy();
+        occlusionRenderBuffer1.destroy();
+        occlusionRenderBuffer2.destroy();
 
         saoOcclusionRenderer.destroy();
         saoDepthLimitedBlurRenderer.destroy();
@@ -11863,7 +11908,7 @@ const Renderer = function (scene, options) {
  * Subscribing to mouse events on the canvas:
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
+ * import {Viewer} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *      canvasId: "myCanvas"
@@ -14598,7 +14643,7 @@ const offsetEye = math.vec3();
  * There is exactly one Camera per {@link Scene}:
  *
  * ````javascript
- * import {Viewer} from "viewer/Viewer.js";
+ * import {Viewer} from "xeokit-sdk.es.js";
  *
  * var camera = viewer.scene.camera;
  *
@@ -15480,14 +15525,9 @@ class Light extends Component {
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#lights_DirLight_view)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {buildSphereGeometry} from "../src/scene/geometry/builders/buildSphereGeometry.js";
- * import {buildPlaneGeometry} from "../src/scene/geometry/builders/buildPlaneGeometry.js";
- * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
- * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
- * import {Texture} from "../src/scene/materials/Texture.js";
- * import {DirLight} from "../src/scene/lights/DirLight.js";
+ * import {Viewer, Mesh, buildSphereGeometry,
+ *      buildPlaneGeometry, ReadableGeometry,
+ *      PhongMaterial, Texture, DirLight} from "xeokit-sdk.es.js";
  *
  * // Create a Viewer and arrange the camera
  *
@@ -15791,13 +15831,8 @@ class DirLight extends Light {
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#lights_AmbientLight)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {buildTorusGeometry} from "../src/scene/geometry/builders/buildTorusGeometry.js";
- * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
- * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
- * import {Texture} from "../src/scene/materials/Texture.js";
- * import {AmbientLight} from "../src/scene/lights/AmbientLight.js";
+ * import {Viewer, Mesh, buildTorusGeometry,
+ * ReadableGeometry, PhongMaterial, Texture, AmbientLight} from "xeokit-sdk.es.js";
  *
  * // Create a Viewer and arrange the camera
  *
@@ -16508,11 +16543,7 @@ const tempAABB = math.AABB3();
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_ReadableGeometry)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js"
- * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
- * import {Texture} from "../src/scene/materials/Texture.js";
+ * import {Viewer, Mesh, ReadableGeometry, PhongMaterial, Texture} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *         canvasId: "myCanvas"
@@ -17183,12 +17214,7 @@ class ReadableGeometry extends Geometry {
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_builders_buildBoxGeometry)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {buildBoxGeometry} from "../src/scene/geometry/builders/buildBoxGeometry.js";
- * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
- * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
- * import {Texture} from "../src/scene/materials/Texture.js";
+ * import {Viewer, Mesh, buildBoxGeometry, ReadableGeometry, PhongMaterial, Texture} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *         canvasId: "myCanvas"
@@ -17467,13 +17493,8 @@ const alphaModeNames = ["opaque", "mask", "blend"];
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#materials_PhongMaterial)]
  *
  *  ```` javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {buildTorusGeometry} from "../src/scene/geometry/builders/buildTorusGeometry.js";
- * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
- * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
- * import {Texture} from "../src/scene/materials/Texture.js";
- * import {Fresnel} from "../src/scene/materials/Fresnel.js";
+ * import {Viewer, Mesh, buildTorusGeometry,
+ *     ReadableGeometry, PhongMaterial, Texture, Fresnel} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *        canvasId: "myCanvas"
@@ -18923,12 +18944,8 @@ const PRESETS$1 = {
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#materials_EdgeMaterial)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {buildSphereGeometry} from "../src/scene/geometry/builders/buildSphereGeometry.js";
- * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
- * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
- * import {EdgeMaterial} from "../src/scene/materials/EdgeMaterial.js";
+ * import {Viewer, Mesh, buildSphereGeometry,
+ *      ReadableGeometry, PhongMaterial, EdgeMaterial} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *      canvasId: "myCanvas",
@@ -19290,8 +19307,7 @@ const unitsInfo = {
  * mapping between the Real-space and World-space 3D coordinate systems.
  *
  * ````JavaScript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {XKTLoaderPlugin} from "../src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js";
+ * import {Viewer, XKTLoaderPlugin} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *     canvasId: "myCanvas"
@@ -19534,8 +19550,7 @@ class Metrics extends Component {
  * clipping planes. Finally, we'll use {@link XKTLoaderPlugin} to load the OTC Conference Center model.
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {XKTLoaderPlugin} from "../src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js";
+ * import {Viewer, XKTLoaderPlugin} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *     canvasId: "myCanvas",
@@ -19676,7 +19691,12 @@ class SAO extends Component {
 
         super(owner, cfg);
 
-        this._supported = WEBGL_INFO$1.SUPPORTED_EXTENSIONS["OES_standard_derivatives"]; // For computing normals in SAO fragment shader
+        const ua = navigator.userAgent.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
+        const browser =  (navigator.userAgent.match(/Edge/i) || navigator.userAgent.match(/Trident.*rv[ :]*11\./i)) ? "msie": ua[1].toLowerCase();
+        const isSafari = (browser === "safari");
+
+        this._supported = (!isSafari) &&
+            WEBGL_INFO$1.SUPPORTED_EXTENSIONS["OES_standard_derivatives"]; // For computing normals in SAO fragment shader
 
         this.enabled = cfg.enabled;
         this.kernelRadius = cfg.kernelRadius;
@@ -20074,8 +20094,7 @@ const PRESETS$2 = {
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#materials_PointsMaterial)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {XKTLoaderPlugin} from "../src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js";
+ * import {Viewer, XKTLoaderPlugin} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *     canvasId: "myCanvas",
@@ -20384,8 +20403,7 @@ const PRESETS$3 = {
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#materials_LinesMaterial)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {XKTLoaderPlugin} from "../src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js";
+ * import {Viewer, XKTLoaderPlugin} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *     canvasId: "myCanvas",
@@ -32423,6 +32441,7 @@ class TrianglesBatchingDepthRenderer {
             src.push("varying vec4 vWorldPosition;");
             src.push("varying vec4 vFlags2;");
         }
+        src.push("varying vec2 vHighPrecisionZW;");
         src.push("void main(void) {");
 
         // flags.x = NOT_RENDERED | COLOR_OPAQUE | COLOR_TRANSPARENT
@@ -32450,6 +32469,7 @@ class TrianglesBatchingDepthRenderer {
             }
         }
         src.push("gl_Position = clipPos;");
+        src.push("vHighPrecisionZW = gl_Position.zw;");
         src.push("  }");
         src.push("}");
         return src;
@@ -32464,13 +32484,8 @@ class TrianglesBatchingDepthRenderer {
         if (scene.logarithmicDepthBufferEnabled && WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"]) {
             src.push("#extension GL_EXT_frag_depth : enable");
         }
-        src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
         src.push("precision highp float;");
         src.push("precision highp int;");
-        src.push("#else");
-        src.push("precision mediump float;");
-        src.push("precision mediump int;");
-        src.push("#endif");
         if (scene.logarithmicDepthBufferEnabled && WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"]) {
             src.push("uniform float logDepthBufFC;");
             src.push("varying float vFragDepth;");
@@ -32488,12 +32503,14 @@ class TrianglesBatchingDepthRenderer {
         src.push("const float   unpackDownscale = 255. / 256.;");
         src.push("const vec3    packFactors = vec3( 256. * 256. * 256., 256. * 256.,  256. );");
         src.push("const vec4    unpackFactors = unpackDownscale / vec4( packFactors, 1. );");
-        src.push("const float   shiftRight8 = 1. / 256.;");
+        src.push("const float   shiftRight8 = 1.0 / 256.;");
+
         src.push("vec4 packDepthToRGBA( const in float v ) {");
         src.push("    vec4 r = vec4( fract( v * packFactors ), v );");
         src.push("    r.yzw -= r.xyz * shiftRight8;");
         src.push("    return r * packUpScale;");
         src.push("}");
+        src.push("varying vec2 vHighPrecisionZW;");
         src.push("void main(void) {");
         if (clipping) {
             src.push("  bool clippable = (float(vFlags2.x) > 0.0);");
@@ -32510,7 +32527,12 @@ class TrianglesBatchingDepthRenderer {
         if (scene.logarithmicDepthBufferEnabled && WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"]) {
             src.push("gl_FragDepthEXT = log2( vFragDepth ) * logDepthBufFC * 0.5;");
         }
-        src.push("    gl_FragColor = packDepthToRGBA(gl_FragCoord.z); "); // Must be linear depth
+        src.push("float fragCoordZ = 0.5 * vHighPrecisionZW[0] / vHighPrecisionZW[1] + 0.5;");
+        if (WEBGL_INFO$1.SUPPORTED_EXTENSIONS["WEBGL_depth_texture"]) {
+            src.push("    gl_FragColor = vec4(vec3(1.0 - fragCoordZ), 1.0); ");
+        } else {
+            src.push("    gl_FragColor = packDepthToRGBA(fragCoordZ); "); // Must be linear depth
+        }
         src.push("}");
         return src;
     }
@@ -38461,6 +38483,7 @@ class TrianglesInstancingDepthRenderer {
             src.push("varying vec4 vWorldPosition;");
             src.push("varying vec4 vFlags2;");
         }
+        src.push("varying vec2 vHighPrecisionZW;");
         src.push("void main(void) {");
 
         // flags.x = NOT_RENDERED | COLOR_OPAQUE | COLOR_TRANSPARENT
@@ -38491,6 +38514,7 @@ class TrianglesInstancingDepthRenderer {
             }
         }
         src.push("gl_Position = clipPos;");
+        src.push("vHighPrecisionZW = gl_Position.zw;");
         src.push("}");
         src.push("}");
         return src;
@@ -38507,13 +38531,8 @@ class TrianglesInstancingDepthRenderer {
         if (scene.logarithmicDepthBufferEnabled && WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"]) {
             src.push("#extension GL_EXT_frag_depth : enable");
         }
-        src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
         src.push("precision highp float;");
         src.push("precision highp int;");
-        src.push("#else");
-        src.push("precision mediump float;");
-        src.push("precision mediump int;");
-        src.push("#endif");
         if (scene.logarithmicDepthBufferEnabled) {
             if (WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"]) {
                 src.push("uniform float logDepthBufFC;");
@@ -38529,19 +38548,21 @@ class TrianglesInstancingDepthRenderer {
                 src.push("uniform vec3 sectionPlaneDir" + i + ";");
             }
         }
+        if (!WEBGL_INFO$1.SUPPORTED_EXTENSIONS["WEBGL_depth_texture"]) {
 
-        src.push("const float   packUpScale = 256. / 255.;");
-        src.push("const float   unpackDownscale = 255. / 256.;");
-        src.push("const vec3    packFactors = vec3( 256. * 256. * 256., 256. * 256.,  256. );");
-        src.push("const vec4    unpackFactors = unpackDownscale / vec4( packFactors, 1. );");
-        src.push("const float   shiftRight8 = 1.0 / 256.;");
+            src.push("const float   packUpScale = 256. / 255.;");
+            src.push("const float   unpackDownscale = 255. / 256.;");
+            src.push("const vec3    packFactors = vec3( 256. * 256. * 256., 256. * 256.,  256. );");
+            src.push("const vec4    unpackFactors = unpackDownscale / vec4( packFactors, 1. );");
+            src.push("const float   shiftRight8 = 1.0 / 256.;");
 
-        src.push("vec4 packDepthToRGBA( const in float v ) {");
-        src.push("    vec4 r = vec4( fract( v * packFactors ), v );");
-        src.push("    r.yzw -= r.xyz * shiftRight8;");
-        src.push("    return r * packUpScale;");
-        src.push("}");
-
+            src.push("vec4 packDepthToRGBA( const in float v ) {");
+            src.push("    vec4 r = vec4( fract( v * packFactors ), v );");
+            src.push("    r.yzw -= r.xyz * shiftRight8;");
+            src.push("    return r * packUpScale;");
+            src.push("}");
+        }
+        src.push("varying vec2 vHighPrecisionZW;");
         src.push("void main(void) {");
         if (clipping) {
             src.push("  bool clippable = (float(vFlags2.x) > 0.0);");
@@ -38555,9 +38576,14 @@ class TrianglesInstancingDepthRenderer {
             src.push("if (dist > 0.0) { discard; }");
             src.push("}");
         }
-        src.push("    gl_FragColor = packDepthToRGBA( gl_FragCoord.z); "); // Must be linear depth
         if (scene.logarithmicDepthBufferEnabled && WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"]) {
             src.push("gl_FragDepthEXT = log2( vFragDepth ) * logDepthBufFC * 0.5;");
+        }
+        src.push("float fragCoordZ = 0.5 * vHighPrecisionZW[0] / vHighPrecisionZW[1] + 0.5;");
+        if (WEBGL_INFO$1.SUPPORTED_EXTENSIONS["WEBGL_depth_texture"]) {
+            src.push("    gl_FragColor = vec4(vec3(1.0 - fragCoordZ), 1.0); ");
+        } else {
+            src.push("    gl_FragColor = packDepthToRGBA(fragCoordZ); "); // Must be linear depth
         }
         src.push("}");
         return src;
@@ -50291,8 +50317,7 @@ const defaultQuaternion = math.identityQuaternion();
  * [[Run this example](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_instancing)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {PerformanceModel} from "../src/viewer/scene/PerformanceModels/PerformanceModel.js";
+ * import {Viewer, PerformanceModel} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *     canvasId: "myCanvas",
@@ -50494,8 +50519,7 @@ const defaultQuaternion = math.identityQuaternion();
  * * [[Run this example](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {PerformanceModel} from "../src/viewer/scene/PerformanceModel/PerformanceModel.js";
+ * import {Viewer, PerformanceModel} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *     canvasId: "myCanvas",
@@ -61706,8 +61730,7 @@ parsers[ParserV7.version] = ParserV7;
  * * [[Run example](https://xeokit.github.io/xeokit-sdk/examples/#BIMOffline_XKT_metadata_Schependomlaan)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {XKTLoaderPlugin} from "../src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js";
+ * import {Viewer, XKTLoaderPlugin} from "xeokit-sdk.es.js";
  *
  * //------------------------------------------------------------------------------------------------------------------
  * // 1. Create a Viewer,
@@ -61908,7 +61931,7 @@ parsers[ParserV7.version] = ParserV7;
  * * [[Run example](https://xeokit.github.io/xeokit-sdk/examples/#loading_XKT_dataSource)]
  *
  * ````javascript
- * import {utils} from "./../src/viewer/scene/utils.js";
+ * import {utils} from "xeokit-sdk.es.js";
  *
  * class MyDataSource {
  *
@@ -62419,6 +62442,349 @@ class XKTLoaderPlugin extends Plugin {
     }
 }
 
+/**
+ * {@link Viewer} plugin that improves interactivity by disabling expensive rendering effects while the {@link Camera} is moving.
+ *
+ * # Usage
+ *
+ * In the example below, we'll create a {@link Viewer}, add a {@link FastNavPlugin}, then use an {@link XKTLoaderPlugin} to load a model.
+ *
+ * This viewer will only render the model with enhanced edges, physically-based rendering (PBR) and scalable
+ * ambient obscurance (SAO) when the camera is not moving.
+ *
+ * Note how we enable SAO and PBR on the ````Scene```` and the model.
+ *
+ * * [[Run this example](https://xeokit.github.io/xeokit-sdk/examples/#performance_FastNavPlugin)]
+ *
+ * ````javascript
+ * import {Viewer, XKTLoaderPlugin, FastNavPlugin} from "xeokit-sdk.es.js";
+ *
+ * const viewer = new Viewer({
+ *      canvasId: "myCanvas",
+ *      transparent: true,
+ *      pbrEnabled: true,
+ *      saoEnabled: true
+ *  });
+ *
+ * viewer.scene.camera.eye = [-66.26, 105.84, -281.92];
+ * viewer.scene.camera.look = [42.45, 49.62, -43.59];
+ * viewer.scene.camera.up = [0.05, 0.95, 0.15];
+ *
+ * new FastNavPlugin(viewer, {
+ *     pbrEnabled: true,
+ *     saoEnabled: true,
+ *     edgesEnabled: true
+ * });
+ *
+ * const xktLoader = new XKTLoaderPlugin(viewer);
+ *
+ * const model = xktLoader.load({
+ *      id: "myModel",
+ *      src: "./models/xkt/HolterTower/HolterTower.xkt",
+ *      metaModelSrc: "./metaModels/HolterTower/HolterTower.json",
+ *      edges: true,
+ *      saoEnabled: true,
+ *      pbrEnabled: true
+ * });
+ * ````
+ *
+ * @class FastNavPlugin
+ */
+class FastNavPlugin extends Plugin {
+
+    /**
+     * @constructor
+     * @param {Viewer} viewer The Viewer.
+     * @param {Object} cfg FastNavPlugin configuration.
+     * @param {String} [cfg.id="FastNav"] Optional ID for this plugin, so that we can find it within {@link Viewer#plugins}.
+     * @param {Boolean} [cfg.pbrEnabled] Whether to enable physically-based rendering (PBR) when the camera stops moving. When not specified, PBR will be enabled if its currently enabled for the Viewer (see {@link Viewer#pbrEnabled}).
+     * @param {Boolean} [cfg.saoEnabled] Whether to enable scalable ambient occlusion (SAO) when the camera stops moving. When not specified, SAO will be enabled if its currently enabled for the Viewer (see {@link Scene#pbrEnabled}).
+     * @param {Boolean} [cfg.edgesEnabled] Whether to show enhanced edges when the camera stops moving. When not specified, edges will be enabled if they're currently enabled for the Viewer (see {@link EdgeMaterial#edges}).
+     */
+    constructor(viewer, cfg = {}) {
+
+        super("FastNav", viewer);
+
+        this._pbrEnabled = (cfg.pbrEnabled !== undefined && cfg.pbrEnabled !== null) ? cfg.pbrEnabled : viewer.scene.pbrEnabled;
+        this._saoEnabled = (cfg.saoEnabled !== undefined && cfg.saoEnabled !== null) ? cfg.saoEnabled : viewer.scene.sao.enabled;
+        this._edgesEnabled = (cfg.edgesEnabled !== undefined && cfg.edgesEnabled !== null) ? cfg.edgesEnabled : viewer.scene.edgeMaterial.edges;
+
+        this._pInterval = null;
+        this._fadeMillisecs = 500;
+
+        let timeoutDuration = 600; // Milliseconds
+        let timer = timeoutDuration;
+        let fastMode = false;
+
+        this._onCanvasBoundary = viewer.scene.canvas.on("boundary", () => {
+            timer = timeoutDuration;
+            if (!fastMode) {
+                this._cancelFade();
+                viewer.scene.pbrEnabled = false;
+                viewer.scene.sao.enabled = false;
+                viewer.scene.edgeMaterial.edges = false;
+                fastMode = true;
+            }
+        });
+
+        this._onCameraMatrix = viewer.scene.camera.on("matrix", () => {
+            timer = timeoutDuration;
+            if (!fastMode) {
+                this._cancelFade();
+                viewer.scene.pbrEnabled = false;
+                viewer.scene.sao.enabled = false;
+                viewer.scene.edgeMaterial.edges = false;
+                fastMode = true;
+            }
+        });
+
+        this._onSceneTick = viewer.scene.on("tick", (tickEvent) => {  // Milliseconds
+            if (!fastMode) {
+                return;
+            }
+            timer -= tickEvent.deltaTime;
+            if (timer <= 0) {
+                if (fastMode) {
+                    this._startFade();
+                    this._pInterval2 = setTimeout(() => { // Needed by Firefox - https://github.com/xeokit/xeokit-sdk/issues/624
+                        viewer.scene.pbrEnabled = this._pbrEnabled;
+                        viewer.scene.sao.enabled = this._saoEnabled;
+                        viewer.scene.edgeMaterial.edges = this._edgesEnabled;
+                    }, 100);
+
+                    fastMode = false;
+                }
+            }
+        });
+
+        let down = false;
+
+        this._onSceneMouseDown = viewer.scene.input.on("mousedown", () => {
+            timer = timeoutDuration;
+            if (!fastMode) {
+                this._cancelFade();
+                viewer.scene.pbrEnabled = false;
+                viewer.scene.sao.enabled = false;
+                viewer.scene.edgeMaterial.edges = false;
+                fastMode = true;
+            }
+            down = true;
+        });
+
+        this._onSceneMouseUp = viewer.scene.input.on("mouseup", () => {
+            down = false;
+        });
+
+        this._onSceneMouseMove = viewer.scene.input.on("mousemove", () => {
+            if (!down) {
+                return;
+            }
+            timer = timeoutDuration;
+            if (!fastMode) {
+                this._cancelFade();
+                viewer.scene.pbrEnabled = false;
+                viewer.scene.sao.enabled = false;
+                viewer.scene.edgeMaterial.edges = false;
+                fastMode = true;
+            }
+        });
+    }
+
+    _startFade() {
+
+        if (!this._img) {
+            this._initFade();
+        }
+
+        const interval = 50;
+        const inc = 1 / (this._fadeMillisecs / interval);
+
+        if (this._pInterval) {
+            clearInterval(this._pInterval);
+            this._pInterval = null;
+        }
+
+        const viewer = this.viewer;
+
+        const canvas = viewer.scene.canvas.canvas;
+        const canvasOffset = cumulativeOffset(canvas);
+        const zIndex = (parseInt(canvas.style["z-index"]) || 0) + 1;
+        this._img.style.position = "fixed";
+        this._img.style["margin"] = 0 + "px";
+        this._img.style["z-index"] = zIndex;
+        this._img.style["background"] = canvas.style.background;
+        this._img.style.left = canvasOffset.left + "px";
+        this._img.style.top = canvasOffset.top + "px";
+        this._img.style.width = canvas.width + "px";
+        this._img.style.height = canvas.height + "px";
+        this._img.width = canvas.width;
+        this._img.height = canvas.height;
+        this._img.src = ""; // Needed by Firefox - https://github.com/xeokit/xeokit-sdk/issues/624
+        this._img.src = viewer.getSnapshot({
+            format: "png",
+            includeGizmos: true
+        });
+        this._img.style.visibility = "visible";
+        this._img.style.opacity = 1;
+
+        let opacity = 1;
+        this._pInterval = setInterval(() => {
+            opacity -= inc;
+            if (opacity > 0) {
+                this._img.style.opacity = opacity;
+                const canvasOffset = cumulativeOffset(canvas);
+                this._img.style.left = canvasOffset.left + "px";
+                this._img.style.top = canvasOffset.top + "px";
+                this._img.style.width = canvas.width + "px";
+                this._img.style.height = canvas.height + "px";
+                this._img.style.opacity = opacity;
+                this._img.width = canvas.width;
+                this._img.height = canvas.height;
+
+            } else {
+                this._img.style.opacity = 0;
+                this._img.style.visibility = "hidden";
+                clearInterval(this._pInterval);
+                this._pInterval = null;
+            }
+        }, interval);
+    }
+
+    _initFade() {
+        this._img = document.createElement('img');
+        const canvas = this.viewer.scene.canvas.canvas;
+        const canvasOffset = cumulativeOffset(canvas);
+        const zIndex = (parseInt(canvas.style["z-index"]) || 0) + 1;
+        this._img.style.position = "absolute";
+        this._img.style.visibility = "hidden";
+        this._img.style["pointer-events"] = "none";
+        this._img.style["z-index"] = 5;
+        this._img.style.left = canvasOffset.left + "px";
+        this._img.style.top = canvasOffset.top + "px";
+        this._img.style.width = canvas.width + "px";
+        this._img.style.height = canvas.height + "px";
+        this._img.style.opacity = 1;
+        this._img.width = canvas.width;
+        this._img.height = canvas.height;
+        this._img.left = canvasOffset.left;
+        this._img.top = canvasOffset.top;
+        canvas.parentNode.insertBefore(this._img, canvas.nextSibling);
+    }
+
+    _cancelFade() {
+        if (!this._img) {
+            return;
+        }
+        if (this._pInterval) {
+            clearInterval(this._pInterval);
+            this._pInterval = null;
+        }
+        if (this._pInterval2) {
+            clearInterval(this._pInterval2);
+            this._pInterval2 = null;
+        }
+        this._img.style.opacity = 0;
+        this._img.style.visibility = "hidden";
+    }
+
+    /**
+     * Sets whether to enable physically-based rendering (PBR) when the camera stops moving.
+     *
+     * @return {Boolean} Whether PBR will be enabled.
+     */
+    set pbrEnabled(pbrEnabled) {
+        this._pbrEnabled = pbrEnabled;
+    }
+
+    /**
+     * Gets whether to enable physically-based rendering (PBR) when the camera stops moving.
+     *
+     * @return {Boolean} Whether PBR will be enabled.
+     */
+    get pbrEnabled() {
+        return this._pbrEnabled
+    }
+
+    /**
+     * Sets whether to enable scalable ambient occlusion (SAO) when the camera stops moving.
+     *
+     * @return {Boolean} Whether SAO will be enabled.
+     */
+    set saoEnabled(saoEnabled) {
+        this._saoEnabled = saoEnabled;
+    }
+
+    /**
+     * Gets whether the FastNavPlugin enables SAO when switching to quality rendering.
+     *
+     * @return {Boolean} Whether SAO will be enabled.
+     */
+    get saoEnabled() {
+        return this._saoEnabled
+    }
+
+    /**
+     * Sets whether to show enhanced edges when the camera stops moving.
+     *
+     * @return {Boolean} Whether edge enhancement will be enabled.
+     */
+    set edgesEnabled(edgesEnabled) {
+        this._edgesEnabled = edgesEnabled;
+    }
+
+    /**
+     * Gets whether to show enhanced edges when the camera stops moving.
+     *
+     * @return {Boolean} Whether edge enhancement will be enabled.
+     */
+    get edgesEnabled() {
+        return this._edgesEnabled
+    }
+
+    /**
+     * @private
+     */
+    send(name, value) {
+        switch (name) {
+            case "clear":
+                this._cancelFade();
+                break;
+        }
+    }
+
+    /**
+     * Destroys this plugin.
+     */
+    destroy() {
+        this._cancelFade();
+        this.viewer.scene.camera.off(this._onCameraMatrix);
+        this.viewer.scene.canvas.off(this._onCanvasBoundary);
+        this.viewer.scene.input.off(this._onSceneMouseDown);
+        this.viewer.scene.input.off(this._onSceneMouseUp);
+        this.viewer.scene.input.off(this._onSceneMouseMove);
+        this.viewer.scene.off(this._onSceneTick);
+        super.destroy();
+        if (this._img) {
+            this._img.parentNode.removeChild(this._img);
+            this._img = null;
+        }
+    }
+}
+
+function cumulativeOffset(element) {
+    let top = 0, left = 0;
+    do {
+        top += element.offsetTop || 0;
+        left += element.offsetLeft || 0;
+        element = element.offsetParent;
+    } while (element);
+
+    return {
+        top: top,
+        left: left
+    };
+}
+
 const angleAxis = math.vec4(4);
 const q1 = math.vec4();
 const q2 = math.vec4();
@@ -62450,10 +62816,7 @@ const identityMat = math.identityMat4();
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_SceneGraph)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {Node} from "../src/scene/nodes/Node.js";
- * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
+ * import {Viewer, Mesh, Node, PhongMaterial} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *     canvasId: "myCanvas"
@@ -68538,12 +68901,7 @@ const identityMat$1 = math.identityMat4();
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_SceneGraph)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {Node} from "../src/scene/nodes/Node.js";
- * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
- * import {buildBoxGeometry} from "../src/viewer/scene/geometry/builders/buildBoxGeometry.js";
- * import {ReadableGeometry} from "../src/viewer/scene/geometry/ReadableGeometry.js";
+ * import {Viewer, Mesh, Node, PhongMaterial, buildBoxGeometry, ReadableGeometry} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *     canvasId: "myCanvas"
@@ -70668,11 +71026,7 @@ const tempAABB$1 = math.AABB3();
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_VBOGeometry)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {VBOGeometry} from "../src/scene/geometry/VBOGeometry.js"
- * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
- * import {Texture} from "../src/scene/materials/Texture.js";
+ * import {Viewer, Mesh, VBOGeometry, PhongMaterial, Texture} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *         canvasId: "myCanvas"
@@ -70990,12 +71344,7 @@ const modeNames = ["opaque", "mask", "blend"];
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#materials_MetallicMaterial)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {loadOBJGeometry} from "../src/scene/geometry/loaders/loadOBJGeometry.js";
- * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
- * import {MetallicMaterial} from "../src/scene/materials/MetallicMaterial.js";
- * import {Texture} from "../src/scene/materials/Texture.js";
+ * import {Viewer, Mesh, loadOBJGeometry, ReadableGeometry, MetallicMaterial, Texture} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *      canvasId: "myCanvas"
@@ -71808,11 +72157,7 @@ const alphaModeNames$1 = ["opaque", "mask", "blend"];
  * within the same {@link Texture} for efficiency.
  *
  * ````javascript
- * import {Viewer} from "src/viewer/Viewer.js";
- * import {Mesh} from "src/scene/mesh/Mesh.js";
- * import {buildTorusGeometry} from "src/scene/geometry/builders/buildTorusGeometry.js";
- * import {SpecularMaterial} from "src/scene/materials/SpecularMaterial.js";
- * import {Texture} from "src/scene/materials/Texture.js";
+ * import {Viewer, Mesh, buildTorusGeometry, SpecularMaterial, Texture} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({ canvasId: "myCanvas" });
  *
@@ -72869,12 +73214,8 @@ function nextHighestPowerOfTwo(x) {
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#materials_Texture)]
  *
  * ```` javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {buildTorusGeometry} from "../src/scene/geometry/builders/buildTorusGeometry.js";
- * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
- * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
- * import {Texture} from "../src/scene/materials/Texture.js";
+ * import {Viewer, Mesh, buildTorusGeometry,
+ *      ReadableGeometry, PhongMaterial, Texture} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *      canvasId: "myCanvas"
@@ -74845,8 +75186,7 @@ function getBasePath(src) {
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#BIMOffline_glTF_OTCConferenceCenter)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {GLTFLoaderPlugin} from "../src/plugins/GLTFLoaderPlugin/GLTFLoaderPlugin.js";
+ * import {Viewer, GLTFLoaderPlugin} from "xeokit-sdk.es.js";
  *
  * //------------------------------------------------------------------------------------------------------------------
  * // 1. Create a Viewer,
@@ -75248,12 +75588,7 @@ class GLTFLoaderPlugin extends Plugin {
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_builders_buildSphereGeometry)]
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {buildSphereGeometry} from "../src/scene/geometry/builders/buildSphereGeometry.js";
- * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
- * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
- * import {Texture} from "../src/scene/materials/Texture.js";
+ * import {Viewer, Mesh, buildSphereGeometry, ReadableGeometry, PhongMaterial, Texture} from "xeokit-sdk.es.js";
  *
  * const viewer = new Viewer({
  *     canvasId: "myCanvas"
@@ -75557,12 +75892,8 @@ class CubeTexture extends Component {
  * ## Usage
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {buildSphereGeometry} from "../src/scene/geometry/builders/buildSphereGeometry.js";
- * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
- * import {MetallicMaterial} from "../src/scene/materials/MetallicMaterial.js";
- * import {LightMap} from "../src/scene/lights/LightMap.js";
+ * import {Viewer, Mesh, buildSphereGeometry,
+ *      ReadableGeometry, MetallicMaterial, LightMap} from "xeokit-sdk.es.js";
  *
  * // Create a Viewer and arrange the camera
  *
@@ -75635,12 +75966,8 @@ class LightMap extends CubeTexture {
  * ## Usage
  *
  * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {buildSphereGeometry} from "../src/scene/geometry/builders/buildSphereGeometry.js";
- * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
- * import {MetallicMaterial} from "../src/scene/materials/MetallicMaterial.js";
- * import {ReflectionMap} from "../src/scene/lights/ReflectionMap.js";
+ * import {Viewer, Mesh, buildSphereGeometry,
+ *      ReadableGeometry, MetallicMaterial, ReflectionMap} from "xeokit-sdk.es.js";
  *
  * // Create a Viewer and arrange the camera
  *
@@ -75709,4 +76036,4 @@ class ReflectionMap extends CubeTexture {
     }
 }
 
-export { DirLight, GLTFLoaderPlugin, LightMap, Mesh, PhongMaterial, ReflectionMap, VBOGeometry, Viewer, XKTLoaderPlugin, buildSphereGeometry, utils };
+export { DirLight, FastNavPlugin, GLTFLoaderPlugin, LightMap, Mesh, PhongMaterial, ReflectionMap, VBOGeometry, Viewer, XKTLoaderPlugin, buildSphereGeometry, utils };

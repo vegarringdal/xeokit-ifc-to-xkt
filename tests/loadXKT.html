@@ -10,7 +10,7 @@
 </body>
 <script type="module">
 
-    import {Viewer, XKTLoaderPlugin} from "./build/xeokit-components.js";
+    import {Viewer, XKTLoaderPlugin, FastNavPlugin} from "./build/xeokit-components.js";
 
     import {getRequestParams, signalTestComplete} from "./libs/utils.js";
 
@@ -28,6 +28,8 @@
     viewer.camera.eye = [-3.933, 2.855, 27.018];
     viewer.camera.look = [4.400, 3.724, 8.899];
     viewer.camera.up = [-0.018, 0.999, 0.039];
+
+    new FastNavPlugin(viewer);
 
     const xktLoader = new XKTLoaderPlugin(viewer);
 

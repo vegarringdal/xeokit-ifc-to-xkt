@@ -1,10 +1,19 @@
-# ifc2xkt - An Experimental IFC→XKT Converter Using web-ifc
-
+# ifc2xkt
 [![This project is using Percy.io for visual regression testing.](https://percy.io/static/images/percy-badge.svg)](https://percy.io/73524691/xeokit-ifc-to-xkt)
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-ifc-to-xkt.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-ifc-to-xkt)
 
+### An Experimental WASM-Based IFC Importer for xeokit 
+
 [ifc2xkt](https://github.com/xeokit/xeokit-ifc-to-xkt) is an experimental CLI tool for Node.js that converts IFC
-files into xeokit's native XKT geometry format.
+files into [xeokit](https://xeokit.io)'s native XKT geometry format.  
+
+The XKT format compresses huge double-precision models into a compact payload that can be rapidly loaded over the Web
+into a xeokit viewer.
+
+This experimental converter provides a one-step IFC→XKT conversion, using the experimental
+WASM-based [web-ifc](https://github.com/tomvandig/web-ifc) library to parse the IFC input,
+and [xeokit-xkt-utils](https://github.com/xeokit/xeokit-xkt-utils) to generate the XKT output.
+
 
 ![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/rac_advanced_sample_project.png)
 
@@ -23,19 +32,12 @@ files into xeokit's native XKT geometry format.
 - [Visual Tests](#visual-tests)
 - [Acknowledgements](#acknowledgements)
 
-# Introduction
+# Acknowledgements
 
-The XKT format compresses huge double-precision models into a compact payload that can be rapidly loaded over the Web
-into a xeokit viewer.
+This project builds on previous work that was generously contributed to the community by open source BIM developers:
 
-This experimental converter provides a one-step IFC→XKT conversion, using the experimental
-WASM-based [````web-ifc````](https://github.com/tomvandig/web-ifc) library
-from [tomvandig](https://github.com/tomvandig) to parse the IFC input,
-and [xeokit-xkt-utils](https://github.com/xeokit/xeokit-xkt-utils) to generate the XKT output.
-
-The converter is not perfect, and loses some transform precision with distantly-placed models. However, it runs quickly,
-and despite losing some transform precision, seems able to convert distantly-placed models without losing geometry
-precision.
+*  [web-ifc](https://github.com/tomvandig/web-ifc) created by [@tomvandig](https://github.com/tomvandig)
+*  [web-ifc-viewer](https://github.com/agviegas/web-ifc-viewer) created by [@agviegas](https://github.com/agviegas)
 
 # Usage
 
@@ -273,13 +275,7 @@ here: [https://percy.io/73524691/xeokit-ifc-to-xkt](https://percy.io/73524691/xe
 
 # Further Work
 
-* Debug the transform precision loss in ````web-ifc````.
+* Debug the transform precision loss in web-ifc.
 * Support point clouds, line segments etc.
 * Somehow configure rollup.js to build a CJS binary that bundles ````web-ifc.wasm````.
 
-# Acknowledgements
-
-This project builds on previous work that was generously contributed to the community by other open source BIM developers:
-
-*  [web-ifc](https://github.com/tomvandig/web-ifc) by [@tomvandig](https://github.com/tomvandig) 
-*  [web-ifc-viewer](https://github.com/agviegas/web-ifc-viewer) by [@agviegas](https://github.com/agviegas)

@@ -209,7 +209,7 @@ column to open each benchmark's converted XKT file in a xeokit viewer.
          <td class="cell-Y&gt;`W"><a href="https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/MAP.xkt">View</a></td>
       </tr>
       <tr >
-         <td class="cell-title"><a href="https://github.com/aothms/IfcOpenHouse">rac_advanced_sample_project</a></td>
+         <td class="cell-title"><a href="https://knowledge.autodesk.com/support/revit-products/getting-started/caas/CloudHelp/cloudhelp/2020/ENU/Revit-GetStarted/files/GUID-61EF2F22-3A1F-4317-B925-1E85F138BE88-htm.html">rac_advanced_sample_project</a></td>
          <td class="cell-xa}R">43.22M</td>
          <td class="cell-}&gt;pG">6.62M</td>
          <td class="cell-:YKF">11122</td>
@@ -218,7 +218,7 @@ column to open each benchmark's converted XKT file in a xeokit viewer.
          <td class="cell-Y&gt;`W"><a href="https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/rac_advanced_sample_project.xkt">View</a></td>
       </tr>
       <tr >
-         <td class="cell-title"><a href="https://github.com/aothms/IfcOpenHouse">rme_advanced_sample_project</a></td>
+         <td class="cell-title"><a href="https://knowledge.autodesk.com/support/revit-products/getting-started/caas/CloudHelp/cloudhelp/2020/ENU/Revit-GetStarted/files/GUID-61EF2F22-3A1F-4317-B925-1E85F138BE88-htm.html">rme_advanced_sample_project</a></td>
          <td class="cell-xa}R">33.67M</td>
          <td class="cell-}&gt;pG">1.74M</td>
          <td class="cell-:YKF">12884</td>

@@ -6,9 +6,9 @@
 [ifc2xkt](https://github.com/xeokit/xeokit-ifc-to-xkt) is an experimental CLI tool for Node.js that converts IFC
 files into xeokit's native XKT geometry format.
 
-![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/Schependomlaan.png)
+![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/rac_advanced_sample_project.png)
 
-* [[View this XKT model](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/Schependomlaan.xkt)]
+* [[View this XKT model](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/rac_advanced_sample_project.xkt)]
 # Contents
 
 - [Introduction](#introduction)

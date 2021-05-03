@@ -208,7 +208,7 @@ column to open each benchmark's converted XKT file in a xeokit viewer.
          <td class="cell-:YKF">7270</td>
          <td class="cell-efRZ">4761</td>
          <td class="cell-Snov">3.5s</td>
-         <td class="cell-Y&gt;`W"><a href="https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/MAP.xkt">View</a></td>
+         <td class="cell-Y&gt;`W"><a href="https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/Schependomlaan.xkt">View</a></td>
       </tr>
       <tr >
          <td class="cell-title"><a href="https://knowledge.autodesk.com/support/revit-products/getting-started/caas/CloudHelp/cloudhelp/2020/ENU/Revit-GetStarted/files/GUID-61EF2F22-3A1F-4317-B925-1E85F138BE88-htm.html">rac_advanced_sample_project</a></td>

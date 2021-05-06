@@ -276,7 +276,7 @@ We're using visual testing on Percy to catch bugs in ````ifc2xkt````.
 See the latest test reports
 here: [https://percy.io/73524691/xeokit-ifc-to-xkt](https://percy.io/73524691/xeokit-ifc-to-xkt)
 
-![Percy](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/percy.png)
+[![Percy](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/percy.png)](https://percy.io/73524691/xeokit-ifc-to-xkt)
 
 # Further Work
 

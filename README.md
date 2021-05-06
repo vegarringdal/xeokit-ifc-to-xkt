@@ -15,7 +15,7 @@ WASM-based [web-ifc](https://github.com/tomvandig/web-ifc) library to parse the 
 and [xeokit-xkt-utils](https://github.com/xeokit/xeokit-xkt-utils) to generate the XKT output.
 
 
-![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/rac_advanced_sample_project.png)
+[![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/rac_advanced_sample_project.png)](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/rac_advanced_sample_project.xkt)
 
 * [[View this XKT model](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/rac_advanced_sample_project.xkt)]
 
@@ -134,7 +134,7 @@ user    0m4.752s
 sys     0m0.241s
 ```
 
-![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/Schependomlaan.png)
+[![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/Schependomlaan.png)](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/Schependomlaan.xkt)
 
 * [[View this XKT model](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/Schependomlaan.xkt)]
 
@@ -166,7 +166,7 @@ user    0m4.889s
 sys     0m0.173s
 ```
 
-![MAP](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/MAP.png)
+[![MAP](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/MAP.png)](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/MAP.xkt))
 
 * [[View this XKT model](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/MAP.xkt)]
 

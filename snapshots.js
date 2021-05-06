@@ -95,7 +95,7 @@ PercyScript.run(async (page, percySnapshot) => {
         modelStats.modelId = test.ifcPath;
         modelStats.conversionTimeSecs = elapsedSeconds;
 
-     //   await testPage("loadXKT.html?xkt_src=../" + test.xktPath);
+        await testPage("loadXKT.html?xkt_src=../" + test.xktPath);
 
         testStats.tests[test.ifcPath] = modelStats;
     }

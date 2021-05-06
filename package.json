@@ -39,7 +39,6 @@
     "dependencies": {
         "@xeokit/xeokit-xkt-utils": "1.2.0",
         "commander": "^2.20.0",
-        "ifc2json": "^2.0.0",
         "web-ifc": "0.0.17"
     },
     "devDependencies": {

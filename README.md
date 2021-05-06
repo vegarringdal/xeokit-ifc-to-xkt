@@ -166,7 +166,7 @@ user    0m4.889s
 sys     0m0.173s
 ```
 
-[![MAP](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/MAP.png)](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/MAP.xkt))
+[![MAP](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/MAP.png)](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/MAP.xkt)
 
 * [[View this XKT model](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/MAP.xkt)]
 

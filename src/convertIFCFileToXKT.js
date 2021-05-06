@@ -9,11 +9,13 @@ const {convertIFCDataToXKT} = require("./convertIFCDataToXKT.js");
  * @param {String} ifcPath Path to IFC source file.
  * @param {String} xktPath Path to XKT target file.
  * @param {*} [modelStats] Optional object to collect conversion statistics for the model.
- * @return {Promise<void>}
  */
 module.exports.convertIFCFileToXKT = async function(ifcPath, xktPath, modelStats) {
+
     const ifcArrayBuffer = await fs.readFileSync(ifcPath);
+
     const xktContent = await convertIFCDataToXKT(ifcArrayBuffer, modelStats);
+
     await fs.writeFileSync(xktPath, xktContent);
 }
 

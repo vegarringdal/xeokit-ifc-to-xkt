@@ -11,11 +11,16 @@ const {parseIFCIntoXKTModel} = require("./parseIFCIntoXKTModel.js");
  * @return {Promise<Buffer>} The XKT file data.
  */
 module.exports.convertIFCDataToXKT = async function (ifcArrayBuffer, modelStats) {
+
     const xktModel = new XKTModel();
+
     await parseIFCIntoXKTModel(ifcArrayBuffer, xktModel);
+
     xktModel.finalize();
+
     const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
     const xktContent = Buffer.from(xktArrayBuffer);
+
     if (modelStats) {
         modelStats.numObjects = xktModel.entitiesList.length;
         modelStats.numGeometries = xktModel.geometriesList.length;
@@ -23,6 +28,7 @@ module.exports.convertIFCDataToXKT = async function (ifcArrayBuffer, modelStats)
         modelStats.ifcSizeMB = (ifcArrayBuffer.byteLength / 1048576).toFixed(2);
         modelStats.xktSizeMB = (xktArrayBuffer.byteLength / 1048576).toFixed(2);
     }
+
     return xktContent;
 }
 

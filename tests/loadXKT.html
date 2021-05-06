@@ -26,9 +26,23 @@
         saoEnabled: true
     });
 
-    viewer.camera.eye = [-3.933, 2.855, 27.018];
-    viewer.camera.look = [4.400, 3.724, 8.899];
-    viewer.camera.up = [-0.018, 0.999, 0.039];
+    const camera = getRequestParams()["camera"];
+    if (camera) {
+        const cameraCoords = camera.split(",");
+        if (cameraCoords.length !== 9) {
+            throw "Page param invalid: camera";
+        }
+        for (let i = 0; i < 9; i++) {
+            cameraCoords[i] = parseFloat(cameraCoords[i]);
+        }
+        viewer.camera.eye = cameraCoords.slice(0, 3);
+        viewer.camera.look = cameraCoords.slice(3, 6);
+        viewer.camera.up = cameraCoords.slice(6, 9);
+    } else {
+        viewer.camera.eye = [-3.933, 2.855, 27.018];
+        viewer.camera.look = [4.400, 3.724, 8.899];
+        viewer.camera.up = [-0.018, 0.999, 0.039];
+    }
 
     new FastNavPlugin(viewer, {
         saoEnabled: true
@@ -46,6 +60,10 @@
     model.on("loaded", () => {
         viewer.cameraFlight.jumpTo(model);
         signalTestComplete();
+
     });
+
+    window.viewer = viewer;
+
 </script>
 </html>

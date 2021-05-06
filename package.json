@@ -8,6 +8,7 @@
         "ifc2xkt": "./ifc2xkt.js"
     },
     "scripts": {
+        "build-tests": "rollup -c",
         "test": "percy exec -- node snapshots.js",
         "publish": "npm publish --access public"
     },
@@ -36,12 +37,17 @@
         "./src/convertIFCIntoXKTModel.js"
     ],
     "dependencies": {
-        "@xeokit/xeokit-xkt-utils": "1.1.2",
+        "@xeokit/xeokit-xkt-utils": "1.2.0",
         "commander": "^2.20.0",
+        "ifc2json": "^2.0.0",
         "web-ifc": "0.0.17"
     },
     "devDependencies": {
         "@percy/script": "^1.1.0",
-        "http-server": "^0.12.3"
+        "http-server": "^0.12.3",
+        "@xeokit/xeokit-sdk": "1.9.0-alpha.1",
+        "rollup": "^1.32.1",
+        "rollup-plugin-minify-es": "^1.1.1",
+        "rollup-plugin-node-resolve": "^5.2.0"
     }
 }

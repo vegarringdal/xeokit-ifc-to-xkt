@@ -2,6 +2,7 @@ const PercyScript = require('@percy/script');
 const httpServer = require('http-server');
 const {convertIFCFileToXKT} = require("./src/convertIFCFileToXKT.js");
 const fs = require('fs');
+const {convertIFCFileAndMetaModelToXKT} = require("./src/convertIFCFileAndMetaModelToXKT.js");
 
 //---------------------------------------------------------------------------------
 // For each test IFC model:
@@ -25,15 +26,47 @@ PercyScript.run(async (page, percySnapshot) => {
         });
     }
 
-    const models = [
-        "IfcOpenHouse2x3",
-        "IfcOpenHouse4",
-        "Schependomlaan",
-        "MAP",
-        "confCenter",
-        "dataHolter",
-        "rac_advanced_sample_project",
-        "rme_advanced_sample_project"
+    const tests = [
+        {
+            ifcPath: "./tests/models/ifc/IfcOpenHouse2x3.ifc",
+            //metaModelPath: "./tests/models/metaModels/IfcOpenHouse2x3.json",
+            xktPath: "./tests/models/xkt/IfcOpenHouse2x3.xkt"
+        },
+        {
+            ifcPath: "./tests/models/ifc/IfcOpenHouse4.ifc",
+            //metaModelPath: "./tests/models/metaModels/IfcOpenHouse4.json",
+            xktPath: "./tests/models/xkt/IfcOpenHouse4.xkt"
+        },
+        {
+            ifcPath: "./tests/models/ifc/Schependomlaan.ifc",
+            metaModelPath: "./tests/models/metaModels/Schependomlaan.json",
+            xktPath: "./tests/models/xkt/Schependomlaan.xkt"
+        },
+        {
+            ifcPath: "./tests/models/ifc/MAP.ifc",
+            metaModelPath: "./tests/models/metaModels/MAP.json",
+            xktPath: "./tests/models/xkt/MAP.xkt"
+        },
+        {
+            ifcPath: "./tests/models/ifc/OTCConferenceCenter.ifc",
+            metaModelPath: "./tests/models/metaModels/OTCConferenceCenter.json",
+            xktPath: "./tests/models/xkt/OTCConferenceCenter.xkt"
+        },
+        {
+            ifcPath: "./tests/models/ifc/HolterTower.ifc",
+            metaModelPath: "./tests/models/metaModels/HolterTower.json",
+            xktPath: "./tests/models/xkt/HolterTower.xkt"
+        },
+        {
+            ifcPath: "./tests/models/ifc/rac_advanced_sample_project.ifc",
+            metaModelPath: "./tests/models/metaModels/rac_advanced_sample_project.json",
+            xktPath: "./tests/models/xkt/rac_advanced_sample_project.xkt"
+        },
+        {
+            ifcPath: "./tests/models/ifc/rme_advanced_sample_project.ifc",
+            metaModelPath: "./tests/models/metaModels/rme_advanced_sample_project.json",
+            xktPath: "./tests/models/xkt/rme_advanced_sample_project.xkt"
+        }
     ];
 
     let server = httpServer.createServer();
@@ -42,26 +75,29 @@ PercyScript.run(async (page, percySnapshot) => {
     console.log(`Server started`);
 
     const testStats = {
-        models: {}
+        tests: {}
     };
 
-    for (let i = 0, len = models.length; i < len; i++) {
+    for (let i = 0, len = tests.length; i < len; i++) {
 
-        const modelId = models[i];
-        const ifcPath = "./tests/models/ifc/" + modelId + ".ifc";
-        const xktPath = "./tests/models/xkt/" + modelId + ".xkt";
-
+        const test = tests[i];
         const startTime = process.hrtime();
         const modelStats = {};
-        await convertIFCFileToXKT(ifcPath, xktPath, modelStats);
+
+        if (test.metaModelPath) {
+            await convertIFCFileAndMetaModelToXKT(test.ifcPath, test.metaModelPath, test.xktPath, modelStats);
+        } else {
+            await convertIFCFileToXKT(test.ifcPath, test.xktPath, modelStats);
+        }
+
         const elapsedSeconds = parseHrtimeToSeconds(process.hrtime(startTime));
 
-        modelStats.modelId = modelId;
+        modelStats.modelId = test.ifcPath;
         modelStats.conversionTimeSecs = elapsedSeconds;
-        
-        await testPage("loadXKT.html?xkt_src=models/xkt/" + modelId + ".xkt");
 
-        testStats.models[modelId] = modelStats;
+     //   await testPage("loadXKT.html?xkt_src=../" + test.xktPath);
+
+        testStats.tests[test.ifcPath] = modelStats;
     }
 
     server.close();

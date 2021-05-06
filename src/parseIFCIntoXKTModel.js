@@ -9,7 +9,6 @@ const ifcApi = new WebIFC.IfcAPI();
  *
  * @param {Arraybuffer} ifcArrayBuffer The IFC file contents.
  * @param {XKTModel} xktModel The target XKTModel. Note that the caller is responsible for finalizing the XKTModel before use.
- * @return {Promise<void>}
  */
 module.exports.parseIFCIntoXKTModel = async function (ifcArrayBuffer, xktModel) {
 

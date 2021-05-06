@@ -1,7 +1,2 @@
-const {convertIFCFileToXKT} = require('./src/convertIFCFileToXKT.js');
-const {convertIFCDataToXKT} = require('./src/convertIFCDataToXKT.js');
-const {parseIFCIntoXKTModel} = require('./src/parseIFCIntoXKTModel.js');
+export * from "@xeokit/xeokit-sdk/dist/xeokit-sdk.es.js";
 
-module.exports.convertIFCFileToXKT = convertIFCFileToXKT;
-module.exports.convertIFCDataToXKT = convertIFCDataToXKT;
-module.exports.parseIFCIntoXKTModel = parseIFCIntoXKTModel;

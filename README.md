@@ -21,7 +21,7 @@ and [xeokit-xkt-utils](https://github.com/xeokit/xeokit-xkt-utils) to generate t
 
 # Contents
 
-- [Introduction](#introduction)
+- [Acknowledgements](#acknowledgements)
 - [Usage](#usage)
 - [Compatibility](#compatibility)
 - [Features](#features)
